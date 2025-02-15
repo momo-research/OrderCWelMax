@@ -38,6 +38,13 @@ OrderCWelMax/
 
 ## **Build Instructions**
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/OrderCWelMax.git
-   cd OrderCWelMax
+2. Enter the Source Code directory
+3. compile
+```
+  make
+```
+4. run
+```
+./build/seqic
+```
+   
