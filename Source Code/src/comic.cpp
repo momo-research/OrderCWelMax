@@ -62,7 +62,7 @@ AnyOption* read_options(int argc, char* argv[])
 	}
 
 	//const char *configFile = opt->getValue("c");
-	//¾ø¶ÔÂ·¾¶
+	//ç»å¯¹è·¯å¾„
 	const char* configFile = "config.txt";
 
 	if (configFile == NULL) {
@@ -384,42 +384,9 @@ int main(int argc, char** argv)
 	clock_t begin;
 	clock_t end;
 
-	// read seeds from file (instead of mining) for computing \sigma_A(S_A, S_B)
-	if (algo == 100) {
-		cout << "[info] algorithm: (100) reading seeds and compute coverage SelfInfMax" << endl;
-
-		// read A-seeds from file aseeds:
-		string aseeds = "dataset/A-SEED/AS1/aseeds_" + to_string(kA) + ".txt";
-		int* seedArr = new int[kA];
-		ifstream afile(aseeds.c_str(), ios::in);
-		if (afile.is_open()) {
-			int idx = 0;
-			while (!afile.eof()) {
-				string line;
-				getline(afile, line);
-				if (line == "")
-					continue;
-				int u = atoi(line.c_str());
-				seedArr[idx++] = u;
-			}
-			afile.close();
-			cout << "[info] A-seeds read from file: " << endl;
-			for (int i = 0; i < kA; i++)
-				cout << seedArr[i] << " ";
-			cout << endl;
-		}
-		else {
-			cout << "[error] unable to open file: " << aseeds << endl;
-		}
-		begin = clock();
-		computeTrueSpreadByMC(kA, seedArr, dataset, qq, bseeds, ignore_B);
-		end = clock();
-		delete seedArr;
-	}
-
 
 	//compute adoption count in order
-	if (algo == 105) {
+	if (algo == 1) {
 		cout << "[info] algorithm: (105) reading seeds A and B for adoption cnt" << endl;
 		string aseeds_file_name = "dataset/A-SEED/AS2/aseeds_" + to_string(kA) + ".txt";
 		begin = clock();
@@ -427,7 +394,7 @@ int main(int argc, char** argv)
 		end = clock();
 	}
 	//compute node count in order
-	if (algo == 106) {
+	if (algo == 2) {
 		cout << "[info] algorithm: (106) reading seeds A and B for node cnt" << endl;
 		string aseeds_file_name = "dataset/A-SEED/AS2/aseeds_" + to_string(kA) + ".txt";
 		begin = clock();
@@ -435,7 +402,7 @@ int main(int argc, char** argv)
 		end = clock();
 	}
 	//mine seeds using IMM-q1
-	if (algo == 1) {
+	if (algo == 3) {
 		cout << "[info] algorithm: (1) IMM-Order Node Count q=1" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
 		string bseeds_file_name = "dataset/B-SEED/BSRR_test/bseeds_" + to_string(kB) + ".txt";
@@ -451,7 +418,7 @@ int main(int argc, char** argv)
 		computeTrueAdoption(kA, aseeds_file_name, dataset, qq, bseeds_file_name, ignore_B);
 	}
 	//mine seeds using IMM-NoCompe
-	if (algo == 2) {
+	if (algo == 4) {
 		cout << "[info] algorithm: (2) IMM-independent Adoption Count" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
 		string bseeds_file_name = "dataset/B-SEED/BSRR_test/bseeds_" + to_string(kB) + ".txt";
@@ -466,8 +433,8 @@ int main(int argc, char** argv)
 		cout << "[info] Estimate true spread......" << endl;
 		computeTrueAdoption(kA, aseeds_file_name, dataset, qq, bseeds_file_name, ignore_B);
 	}
-	//Estimate SA factor£¬node count
-	if (algo == 3) {
+	//Estimate SA factorï¼Œnode count
+	if (algo == 5) {
 		cout << "[info] algorithm: (3)Estimate SA factor Node Count q=1" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
 		string bseeds_file_name = "dataset/B-SEED/BSRR_test/bseeds_" + to_string(kB) + ".txt";
@@ -482,8 +449,8 @@ int main(int argc, char** argv)
 		cout << "[info] Estimate SA factor......" << endl;
 		computeTrueNodeCnt(kA, aseeds_file_name, dataset, qq, bseeds_file_name, ignore_B);
 	}
-	//Estimate SA factor£¬ adoption count
-	if (algo == 4) {
+	//Estimate SA factorï¼Œ adoption count
+	if (algo == 6) {
 		cout << "[info] algorithm: (3)Estimate SA factor Adoption Count q+" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
 		string bseeds_file_name = "dataset/B-SEED/BSRR_test/bseeds_" + to_string(kB) + ".txt";
@@ -499,7 +466,7 @@ int main(int argc, char** argv)
 		computeTrueAdoption_upper(kA, aseeds_file_name, dataset, qq, bseeds_file_name, ignore_B);
 	}
 	//mine seeds using OPPRT based on A frist
-	if (algo == 5) {
+	if (algo == 7) {
 		cout << "[info] algorithm: (4) RR-Order Afirst" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
 		string bseeds_file_name = "dataset/B-SEED/BSRR_test/bseeds_" + to_string(kB) + ".txt";
@@ -517,7 +484,7 @@ int main(int argc, char** argv)
 		
 	}
 	//mine seeds using OPPRT based on B frist
-	if (algo == 6) {
+	if (algo == 8) {
 		cout << "[info] algorithm: (8) RR-Order Bfirst" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
 		string bseeds_file_name = "dataset/B-SEED/BSRR_test/bseeds_" + to_string(kB) + ".txt";
@@ -534,8 +501,8 @@ int main(int argc, char** argv)
 		cout << "[info] Estimate true spread......" << endl;
 		computeTrueSpread(results[0], results[1], runs, kA, dataset, qq);
 	}
-	//mind seeds using Greedy,A first
-	if (algo == 7) {
+	//mine seeds using Greedy,A first
+	if (algo == 9) {
 		cout << "[info] algorithm: (5) Greedy mining SA and SB for influence with order.A first!" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASGreedy/Afirst_aseeds_" + to_string(kA) + ".txt";
 		string bseeds_file_name = "dataset/B-SEED/BSGreedy/Afirst_bseeds_" + to_string(kB) + ".txt";
@@ -569,7 +536,7 @@ int main(int argc, char** argv)
 
 	}
 	//mine seeds using OPPRT based on B frist
-	if (algo == 8) {
+	if (algo == 10) {
 		cout << "[info] algorithm: (6) Greedy mining SA and SB for influence with order. B first!" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASGreedy/Bfirst_aseeds_" + to_string(kA) + ".txt";
 		string bseeds_file_name = "dataset/B-SEED/BSGreedy/Bfirst_bseeds_" + to_string(kB) + ".txt";
@@ -601,7 +568,7 @@ int main(int argc, char** argv)
 	}
 
 	//mine seeds using high degree
-	if (algo == 98) {
+	if (algo == 11) {
 		cout << "[info] algorithm: Highest Degree for both SIM and CIM!" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASHighD/aseeds_" + to_string(kA) + ".txt";
 		string bseeds_file_name = "dataset/B-SEED/BSHighD/bseeds_" + to_string(kB) + ".txt";
@@ -634,7 +601,7 @@ int main(int argc, char** argv)
 	}
 
 	// mine seeds using page rank
-	if (algo == 97)
+	if (algo == 12)
 	{
 		cout << "[info] algorithm: PageRank for both CIM and SIM!" << endl;
 		string aseeds_file_name = "dataset/dm/ASEED/PR/aseeds_" + to_string(kA) + ".txt";
