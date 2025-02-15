@@ -5,7 +5,7 @@
 #include "anyoption.h"
 #include "timgraph.h"
 
-//string database = "/Cit-HepTh_remap.txt";
+//choose dataset
 string database = "/lastfm_wc.txt";
 AnyOption* read_options(int argc, char* argv[])
 {
@@ -147,7 +147,6 @@ void computeTrueSpreadByMC(int k, int* seedSet, string dataset, vector<double> q
 		}
 	}
 }
-
 void computeTrueNodeCnt(int k, string aseeds_file_name, string dataset, vector<double> qq, string bseeds, bool ignore_B) {
 	cout << "[info] compute true nodeCount using Monte Carlo (Seq)" << endl;
 	MonteCarlo mc(dataset, database);
@@ -177,7 +176,6 @@ void computeTrueNodeCnt(int k, string aseeds_file_name, string dataset, vector<d
 	cout << endl;
 	
 }
-
 void computeTrueAdoption_upper(int k, string aseeds_file_name, string dataset, vector<double> qq, string bseeds, bool ignore_B) {
 	cout << "[info] compute true adoption using Monte Carlo (Seq), upper bound" << endl;
 	MonteCarlo mc(dataset, database);
@@ -226,7 +224,6 @@ void computeTrueAdoption_upper(int k, string aseeds_file_name, string dataset, v
 	cout << endl;
 
 }
-
 void computeTrueAdoption(int k, string aseeds_file_name, string dataset, vector<double> qq, string bseeds, bool ignore_B) {
 	cout << "[info] compute true adoption using Monte Carlo (Seq)" << endl;
 	MonteCarlo mc(dataset, database);
@@ -241,14 +238,7 @@ void computeTrueAdoption(int k, string aseeds_file_name, string dataset, vector<
 	for (int i = 0; i < runs; i++) {
 		cout << endl;
 		cout << "[runs:" << i << "]" << endl;
-
-		//select_B_seeds(mc, dataset, k, mc.n, 1);
-		//Sleep(1000);
-		//select_A_seeds(mc, dataset, k, mc.n, 1);
-		// read A-seeds
 		mc.readASeedsMC(aseeds_file_name);
-		//select_adjacent(mc, dataset, k);
-		// read B-seeds
 		mc.readBSeedsMC();
 		srand(time(NULL));
 		cov1 += mc.compute_coverage_seq_Afirst(mc.aSeeds, k, mc.bSeeds, mc.bSeeds.size(), Acover1, Bcover1, cnt_qab1, cnt_qba1);
@@ -260,8 +250,8 @@ void computeTrueAdoption(int k, string aseeds_file_name, string dataset, vector<
 
 	cov1 /= runs;
 	cov2 /= runs;
-	cov3 /= runs;
-	cov3 /= runs;
+	//cov3 /= runs;
+	//cov4 /= runs;
 
 	double high_cov = max(cov1, cov2);
 	double low_cov = min(cov1, cov2);
@@ -285,22 +275,19 @@ void computeTrueAdoption(int k, string aseeds_file_name, string dataset, vector<
 	cout << "Gap ratio :" << ratio * 100 << "%" << endl;
 	cout << endl;*/
 
-	cout << "A先传播 Item A 的影响力覆盖为: " << Acover1 / (double)runs << "  Item B 的影响力覆盖为: " << Bcover1 / (double)runs << endl;
+	cout << "A first, Item A coverage: " << Acover1 / (double)runs << "  Item B coverage: " << Bcover1 / (double)runs << endl;
 	cout << "[Couting] node calculate A-adoption with probability qab for  " << cnt_qab1 / (double)runs << " times" << endl;
 	cout << "[Couting] node calculate B-adoption with probability qba for  " << cnt_qba1 / (double)runs << " times" << endl;
 	cout << "_____________________________________________________________________________________________________________" << endl;
-	cout << "B先传播 Item A 的影响力覆盖为: " << Acover2 / (double)runs << "  Item B 的影响力覆盖为: " << Bcover2 / (double)runs << endl;
+	cout << "B first, Item A coverage: " << Acover2 / (double)runs << "  Item B coverage: " << Bcover2 / (double)runs << endl;
 	cout << "[Couting] node calculate A-adoption with probability qab for  " << cnt_qab2 / (double)runs << " times" << endl;
 	cout << "[Couting] node calculate B-adoption with probability qba for  " << cnt_qba2 / (double)runs << " times" << endl;
 	cout << "_____________________________________________________________________________________________________________" << endl;
-	cout << "同时传播 Item A 的影响力覆盖为: " << Acover3 / (double)runs << "  Item B 的影响力覆盖为: " << Bcover3 / (double)runs << endl;
+	cout << "Simultaneous, Item A coverage: " << Acover3 / (double)runs << "  Item B coverage: " << Bcover3 / (double)runs << endl;
 	cout << "[Couting] node calculate A-adoption with probability qab for  " << cnt_qab3 / (double)runs << " times" << endl;
 	cout << "[Couting] node calculate B-adoption with probability qba for  " << cnt_qba3 / (double)runs << " times" << endl;
 	cout << "_____________________________________________________________________________________________________________" << endl;
-	/*
-	cout << "同时传播 Item A 的影响力覆盖为: " << Acover4 / (double)runs << "  Item B 的影响力覆盖为: " << Bcover4 / (double)runs << endl;
-	cout << "[Couting] node calculate A-adoption with probability qab for  " << cnt_qab4 / (double)runs << " times" << endl;
-	cout << "[Couting] node calculate B-adoption with probability qba for  " << cnt_qba4 / (double)runs << " times" << endl;*/
+	
 }
 void computeTrueSpread(vector<vector<int>> vec_aseed, vector<vector<int>> vec_bseed, int runs, int k, string dataset, vector<double> qq) {
 	MonteCarlo mc(dataset, database);
@@ -354,6 +341,7 @@ void computeTrueSpread(vector<vector<int>> vec_aseed, vector<vector<int>> vec_bs
 	cout << "[Couting] node calculate B-adoption with probability qba for  " << cnt_qba3 / (double)runs << " times" << endl;
 	cout << "_____________________________________________________________________________________________________________" << endl;
 }
+
 int main(int argc, char** argv)
 {
 	AnyOption* opt = read_options(argc, argv);
@@ -363,7 +351,7 @@ int main(int argc, char** argv)
 	
 	int kA = atoi(opt->getValue("kA"));
 	int kB = atoi(opt->getValue("kB"));
-	
+	//GAPs
 	double qao, qab, qbo, qba;
 	qao = atof(opt->getValue("qao"));
 	qab = atof(opt->getValue("qab"));
@@ -430,7 +418,7 @@ int main(int argc, char** argv)
 	}
 
 
-	//compute sequence spread of A and B
+	//compute adoption count in order
 	if (algo == 105) {
 		cout << "[info] algorithm: (105) reading seeds A and B for adoption cnt" << endl;
 		string aseeds_file_name = "dataset/A-SEED/AS2/aseeds_" + to_string(kA) + ".txt";
@@ -438,6 +426,7 @@ int main(int argc, char** argv)
 		computeTrueAdoption(kA, aseeds_file_name, dataset, qq, bseeds, ignore_B);
 		end = clock();
 	}
+	//compute node count in order
 	if (algo == 106) {
 		cout << "[info] algorithm: (106) reading seeds A and B for node cnt" << endl;
 		string aseeds_file_name = "dataset/A-SEED/AS2/aseeds_" + to_string(kA) + ".txt";
@@ -445,6 +434,7 @@ int main(int argc, char** argv)
 		computeTrueNodeCnt(kA, aseeds_file_name, dataset, qq, bseeds, ignore_B);
 		end = clock();
 	}
+	//mine seeds using IMM-q1
 	if (algo == 1) {
 		cout << "[info] algorithm: (1) IMM-Order Node Count q=1" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
@@ -460,6 +450,7 @@ int main(int argc, char** argv)
 		cout << "[info] Estimate true spread......" << endl;
 		computeTrueAdoption(kA, aseeds_file_name, dataset, qq, bseeds_file_name, ignore_B);
 	}
+	//mine seeds using IMM-NoCompe
 	if (algo == 2) {
 		cout << "[info] algorithm: (2) IMM-independent Adoption Count" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
@@ -475,6 +466,7 @@ int main(int argc, char** argv)
 		cout << "[info] Estimate true spread......" << endl;
 		computeTrueAdoption(kA, aseeds_file_name, dataset, qq, bseeds_file_name, ignore_B);
 	}
+	//Estimate SA factor，node count
 	if (algo == 3) {
 		cout << "[info] algorithm: (3)Estimate SA factor Node Count q=1" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
@@ -490,6 +482,7 @@ int main(int argc, char** argv)
 		cout << "[info] Estimate SA factor......" << endl;
 		computeTrueNodeCnt(kA, aseeds_file_name, dataset, qq, bseeds_file_name, ignore_B);
 	}
+	//Estimate SA factor， adoption count
 	if (algo == 4) {
 		cout << "[info] algorithm: (3)Estimate SA factor Adoption Count q+" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
@@ -505,6 +498,7 @@ int main(int argc, char** argv)
 		cout << "[info] Estimate SA factor......" << endl;
 		computeTrueAdoption_upper(kA, aseeds_file_name, dataset, qq, bseeds_file_name, ignore_B);
 	}
+	//mine seeds using OPPRT based on A frist
 	if (algo == 5) {
 		cout << "[info] algorithm: (4) RR-Order Afirst" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
@@ -522,6 +516,7 @@ int main(int argc, char** argv)
 		computeTrueSpread(results[0],results[1],runs,kA, dataset, qq);
 		
 	}
+	//mine seeds using OPPRT based on B frist
 	if (algo == 6) {
 		cout << "[info] algorithm: (8) RR-Order Bfirst" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASRR_test/aseeds_" + to_string(kA) + ".txt";
@@ -539,7 +534,7 @@ int main(int argc, char** argv)
 		cout << "[info] Estimate true spread......" << endl;
 		computeTrueSpread(results[0], results[1], runs, kA, dataset, qq);
 	}
-	
+	//mind seeds using Greedy,A first
 	if (algo == 7) {
 		cout << "[info] algorithm: (5) Greedy mining SA and SB for influence with order.A first!" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASGreedy/Afirst_aseeds_" + to_string(kA) + ".txt";
@@ -573,6 +568,7 @@ int main(int argc, char** argv)
 		computeTrueAdoption(kA, aseeds_file_name, dataset, qq, bseeds_file_name, ignore_B);
 
 	}
+	//mine seeds using OPPRT based on B frist
 	if (algo == 8) {
 		cout << "[info] algorithm: (6) Greedy mining SA and SB for influence with order. B first!" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASGreedy/Bfirst_aseeds_" + to_string(kA) + ".txt";
@@ -603,59 +599,8 @@ int main(int argc, char** argv)
 		cout << endl;
 
 	}
-	// random (for both SIM and CIM)
-	if (algo == 99)
-	{
-		cout << "[info] algorithm: Random for both SIM and CIM" << endl;
-		MonteCarlo mc(dataset, "/graph.txt");
-		mc.setParametersMC(50, qq, ignore_B, dataset, bseeds);
-		mc.readBSeedsMC();
 
-		// Just randomly choose 50 seeds
-		unordered_set<int> seedSet;
-		while (seedSet.size() < 50) {
-			int x = rand() % mc.graph->n;
-			seedSet.insert(x);
-		}
-
-		// push it into a vector (for later use)
-		int* seedArr = new int[50];
-		vector<int> vb;
-		int idx = 0;
-		for (auto it = seedSet.begin(); it != seedSet.end(); ++it) {
-			seedArr[idx++] = *it;
-			vb.push_back(*it);
-		}
-
-		// spread for SIM
-		for (int i = 0; i < 50; i++) {
-			if (i == 0 || (i + 1) % 10 == 0) {
-				double cov = mc.compute_coverage(seedArr, i + 1);
-				cout << (i + 1) << "\t" << seedArr[i] << "\t" << cov << endl;
-			}
-		}
-
-		/*
-				// spread for CIM
-				string aseeds_file_name = string(opt->getValue("aseeds"));
-				mc.readASeedsMC_comp(aseeds_file_name);
-				//for (int i = 0; i < kA; i++)
-				//	seedArr[i] = mc.aSeeds.at(i);
-				//double baseSpread = mc.compute_coverage(seedArr, kA);
-				//cout << "[info] spread of A-seeds ALONE = " << baseSpread << endl;
-
-				for (int i = 0; i < vb.size(); i++)  {
-					if (i == 0 || (i+1) % 10 == 0) {
-						double cov = mc.compute_coverage_comp(vb, i+1);
-						cout << (i+1) << "\t" << cov << endl;
-					}
-				}
-		*/
-
-		delete seedArr;
-	}
-
-	// high degree
+	//mine seeds using high degree
 	if (algo == 98) {
 		cout << "[info] algorithm: Highest Degree for both SIM and CIM!" << endl;
 		string aseeds_file_name = "dataset/A-SEED/ASHighD/aseeds_" + to_string(kA) + ".txt";
@@ -688,7 +633,7 @@ int main(int argc, char** argv)
 
 	}
 
-	// page rank
+	// mine seeds using page rank
 	if (algo == 97)
 	{
 		cout << "[info] algorithm: PageRank for both CIM and SIM!" << endl;

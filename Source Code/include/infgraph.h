@@ -16,8 +16,8 @@ using namespace std;
 struct RNode {
 public:
 	int vex;
-	RNode* parent;  // 弱引用，指向父节点
-	vector<unique_ptr<RNode>> children;  // 子节点由 unique_ptr 管理生命周期
+	RNode* parent; 
+	vector<unique_ptr<RNode>> children; 
 
 	RNode(int v) : vex(v), parent(nullptr) {}
 	RNode() : vex(-1), parent(nullptr) {}
@@ -29,9 +29,9 @@ public:
 	vector<vector<int>> hyperG;
 	vector<vector<int>> hyperGT;  // all RR sets
 	int64 hyperId;
-	vector<int> seedSet; // seed set to be mined (A-seeds for Self-Inf-Max and B-seeds for Comp-Inf-Max)
-	vector<int> aSeeds;  // S_A from input files (for Comp-Inf-Max)
-	vector<int> bSeeds;  // S_B from input files (for Self-Inf-Max)
+	vector<int> seedSet; 
+	vector<int> aSeeds;  // S_A 
+	vector<int> bSeeds;  // S_B 
 
 	double qao;
 	double qab;
@@ -58,7 +58,7 @@ public:
 	Graph* graph;
 	int n, m;
 	
-	///////////////////////////////////////////////////////////////并行区///////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////Parallel///////////////////////////////////////////////////
 	mutex lockA,lockB;
 
 	thread_local static vector<int> visited;
@@ -74,8 +74,6 @@ public:
 
 
 	
-	
-	
 	vector<vector<int>> hyperG_A, hyperG_B;
 	vector<vector<int>> hyperGT_A, hyperGT_B;
 	//tree form of RR set
@@ -83,14 +81,9 @@ public:
 	//pointer for each node in it's covered RR sets
 	//vector<unordered_set<RPointer, RPointerHash>> RRP_A, RRP_B;
 	vector<unordered_map<int, RNode*>> RRP_A, RRP_B;
-
 	//tested mark
 	vector<unordered_set<int>> tested;
 	vector<unordered_set<int>> examined;
-
-
-
-
 	vector<int> degree_A, degree_B;
 
 	InfGraph(string folder, string graph_file, int64 theta) //:Graph(folder, graph_file) 
@@ -102,21 +95,8 @@ public:
 		this->theta = theta;
 
 		init_infgraph();
-
-		/*
-		hyperG.clear();
-		for (int i = 0; i < n; i++)
-			hyperG.push_back(vector<int>());
-		*/
-
-		//alpha_A = new double[n];
-		//alpha_B = new double[n];
-		//status_A = new int[n];
-		//status_B = new int[n];
-		//visited = new bool[n];
-		//used = new bool[n];
-		//discovered = new bool[n];
 	}
+
 	void init_infgraph() {
 		hyperG_A.reserve(n);
 		hyperG_B.reserve(n);
@@ -150,49 +130,42 @@ public:
 		}
 	}
 	void reset_hyper() {
-		// 清空 hyperG_A 和 hyperG_B（array form）
 		for (auto& vec : hyperG_A) {
-			vec.clear(); // 清除每个节点的 RR-set 列表
+			vec.clear();
 		}
 		for (auto& vec : hyperG_B) {
-			vec.clear(); // 清除每个节点的 RR-set 列表
+			vec.clear();
 		}
-		// 清空 hyperGT_A 和 hyperGT_B（reverse RR sets）
+
 		for (auto& vec : hyperGT_A) {
-			vec.clear(); // 清除每个 RR-set 的节点列表
+			vec.clear(); 
 		}
 		for (auto& vec : hyperGT_B) {
-			vec.clear(); // 清除每个 RR-set 的节点列表
+			vec.clear(); 
 		}
 		hyperGT_A.resize(theta);
 		hyperGT_B.resize(theta);
 	}
 	void reset_order() {
-
-
-		// 重置 RR 树 (tree form)
 		for (auto& root : RRTree_A) {
-			root.reset(); // 释放 unique_ptr 管理的内存
+			root.reset();
 		}
 		for (auto& root : RRTree_B) {
-			root.reset(); // 释放 unique_ptr 管理的内存
+			root.reset(); 
 		}
 		
-
-		// 清空 tested 和 examined 集合
 		for (auto& set : tested) {
-			set.clear(); // 清除每个 RR-set 的测试标记
+			set.clear(); 
 		}
 		for (auto& set : examined) {
-			set.clear(); // 清除每个 RR-set 的检查标记
+			set.clear(); 
 		}
 
-		// 清空 RRP_A 和 RRP_B（指针容器）
 		for (auto& map : RRP_A) {
-			map.clear(); // 清除每个节点的指针映射
+			map.clear(); 
 		}
 		for (auto& map : RRP_B) {
-			map.clear(); // 清除每个节点的指针映射
+			map.clear(); 
 		}
 	}
 	~InfGraph()

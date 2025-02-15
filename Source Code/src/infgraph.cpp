@@ -90,7 +90,6 @@ double InfGraph::computeInfHyperGraph_Order(int theta) {
 	if (theta <= 0) {
 		throw std::invalid_argument("theta must be greater than 0");
 	}
-	// 存储所有影响的 RR 集合 ID
 	unordered_set<int> s;
 	for (auto t : aSeeds) {
 		for (auto tt : hyperG_A[t]) {
@@ -102,7 +101,6 @@ double InfGraph::computeInfHyperGraph_Order(int theta) {
 			s.insert(tt); 
 		}
 	}
-	// 计算传播规模
 	double inf = static_cast<double>(n) * static_cast<double>(s.size()) / static_cast<double>(theta);
 	return inf;
 }
@@ -140,8 +138,8 @@ int InfGraph::BuildSingleRRSet_q1(int uStart, int rrSetID, bool isrA, bool q1, v
 		return 0;
 	}
 	mutex& currentLock = isrA ? lockA : lockB;
-
-	hyperGT[rrSetID].push_back(uStart); // 添加到 RR-set
+	//add to RR set
+	hyperGT[rrSetID].push_back(uStart);
 	{
 		lock_guard<mutex> lock(currentLock);
 		hyperG[uStart].push_back(rrSetID);
@@ -154,7 +152,7 @@ int InfGraph::BuildSingleRRSet_q1(int uStart, int rrSetID, bool isrA, bool q1, v
 		int u = Q.front();
 		Q.pop();
 		auto& gTu = graph->gT[u];
-		// 遍历邻居节点
+		// go through all neighbours
 		for (int j = 0; j < gTu.size(); j++) {
 			int w = gTu[j]; // edge w --> u
 
@@ -179,20 +177,17 @@ int InfGraph::BuildSingleRRSet_q1(int uStart, int rrSetID, bool isrA, bool q1, v
 			/*******************************************************/
 			visited[w] = time_stamp;
 
-			// 检查节点并构造 RR 集
 			coin = randomDouble();
 			if (coin <= qo) {
 				Q.push(w);
-				// 需要加锁的内容存入临时变量
 				temp.push_back(w);
-				// 无需加锁的内容直接写入
 				hyperGT[rrSetID].push_back(w);;
 
 			}
 		}
 	}//end-while
 	{
-		lock_guard<mutex> lock(currentLock); // 加锁保护写入
+		lock_guard<mutex> lock(currentLock); 
 		for (int w : temp)
 			hyperG[w].push_back(rrSetID);
 	}
@@ -208,8 +203,8 @@ int InfGraph::BuildSingleRRSet_idp(int uStart, int rrSetID, bool isrA, bool q1, 
 		return 0;
 	}
 	mutex& currentLock = isrA ? lockA : lockB;
-
-	hyperGT[rrSetID].push_back(uStart); // 添加到 RR-set
+	//add to RR set
+	hyperGT[rrSetID].push_back(uStart);
 	{
 		lock_guard<mutex> lock(currentLock);
 		hyperG[uStart].push_back(rrSetID);
@@ -222,7 +217,7 @@ int InfGraph::BuildSingleRRSet_idp(int uStart, int rrSetID, bool isrA, bool q1, 
 		int u = Q.front();
 		Q.pop();
 		auto& gTu = graph->gT[u];
-		// 遍历邻居节点
+		// go through all neighbours
 		for (int j = 0; j < gTu.size(); j++) {
 			int w = gTu[j]; // edge w --> u
 
@@ -247,20 +242,17 @@ int InfGraph::BuildSingleRRSet_idp(int uStart, int rrSetID, bool isrA, bool q1, 
 			/*******************************************************/
 			visited[w] = time_stamp;
 
-			// 检查节点并构造 RR 集
 			coin = randomDouble();
 			if (coin <= qo) {
 				Q.push(w);
-				// 需要加锁的内容存入临时变量
 				temp.push_back(w);
-				// 无需加锁的内容直接写入
 				hyperGT[rrSetID].push_back(w);;
 
 			}
 		}
 	}//end-while
 	{
-		lock_guard<mutex> lock(currentLock); // 加锁保护写入
+		lock_guard<mutex> lock(currentLock);
 		for (int w : temp)
 			hyperG[w].push_back(rrSetID);
 	}
@@ -269,7 +261,7 @@ int InfGraph::BuildSingleRRSet_idp(int uStart, int rrSetID, bool isrA, bool q1, 
 void InfGraph::BuildHyperGraphR_q1() {
 	reset_hyper();
 
-	////////////////////////////////////////////并行区////////////////////////////////////////////
+	////////////////////////////////////////////Parallel////////////////////////////////////////////
 	omp_set_num_threads(4);
 	long long progress = 0;
 #pragma omp parallel
@@ -307,7 +299,7 @@ void InfGraph::BuildHyperGraphR_q1() {
 void InfGraph::BuildHyperGraphR_idp() {
 	reset_hyper();
 
-	////////////////////////////////////////////并行区////////////////////////////////////////////
+	////////////////////////////////////////////Parallel////////////////////////////////////////////
 	omp_set_num_threads(4);
 	long long progress = 0;
 #pragma omp parallel
@@ -495,50 +487,47 @@ void InfGraph::printTree(RNode* root) {
 	}
 }
 unique_ptr<RNode> InfGraph::BuildSingleARRSet_Order(int uStart, int rrSetID, bool Afirst) {
-	// 创建 root 节点并用 unique_ptr 管理
+	// Create root node and manage it with unique_ptr
 	auto root = std::make_unique<RNode>(uStart);
 	auto& probT = graph->probT;
 
-	// 临时存储需要写入的数据
+	// Temporary storage for data to be written
 	vector<int> temp;
 
-	// 测试 root 节点
+	// Test the root node
 	double coin = randomDouble();
 	if (coin > qao) {
 		if (Afirst) examined[rrSetID].insert(uStart);
-		return nullptr; // 返回空树
+		return nullptr; // Return an empty tree
 	}
 
-	hyperGT_A[rrSetID].push_back(uStart); // 添加到 RR-set
-	RRP_A[rrSetID].emplace(uStart, root.get());// 将 root 的裸指针存储到索引容器中
+	hyperGT_A[rrSetID].push_back(uStart); // Add to RR-set
+	RRP_A[rrSetID].emplace(uStart, root.get()); // Store the raw pointer of root in the index container
 	{
-		// 临界区保护 hyperG_A 的写操作
+		// Critical section to protect write operations on hyperG_A
 		lock_guard<mutex> lock(lockA);
-		hyperG_A[uStart].push_back(rrSetID); 
+		hyperG_A[uStart].push_back(rrSetID);
 	}
 
-	// BFS 队列初始化
-	queue<RNode*> Q; // 队列存储裸指针，不持有节点所有权
+	// Initialize BFS queue
+	queue<RNode*> Q; // Queue stores raw pointers, does not own the nodes
 	Q.push(root.get());
 	visited[uStart] = time_stamp;
 
-	// BFS 遍历
+	// BFS traversal
 	while (!Q.empty()) {
 		RNode* curNode = Q.front();
 		Q.pop();
 		int u = curNode->vex;
 		auto& gTu = graph->gT[u];
 
-
-
-		// 遍历邻居节点
+		// Traverse neighbor nodes
 		for (int j = 0; j < gTu.size(); j++) {
 			int w = gTu[j]; // edge w --> u
 			if (visited[w] == time_stamp)
 				continue;
 
-
-			/***************** test edge w->u **********************/
+			/***************** Test edge w->u **********************/
 			int prevEdgeStatus = graph->get_thEdgeStatus(u, j);
 			if (prevEdgeStatus == BLOCKED) {
 				continue;
@@ -556,20 +545,20 @@ unique_ptr<RNode> InfGraph::BuildSingleARRSet_Order(int uStart, int rrSetID, boo
 			/*******************************************************/
 			visited[w] = time_stamp;
 
-			// 检查节点并构造 RR 集
+			// Check node and construct RR set
 			coin = randomDouble();
 			if (coin <= qao) {
-				// 创建子节点
+				// Create child node
 				auto newNode = std::make_unique<RNode>(w);
-				newNode->parent = curNode; // 设置父节点
-				RNode* rawNewNode = newNode.get(); // 获取裸指针
-				curNode->children.push_back(std::move(newNode));// 将子节点添加到当前节点的子节点列表
+				newNode->parent = curNode; // Set parent node
+				RNode* rawNewNode = newNode.get(); // Get raw pointer
+				curNode->children.push_back(std::move(newNode)); // Add child node to the current node's children list
 
-				// 需要加锁的内容存入临时变量
+				// Store content requiring lock in temporary variable
 				temp.push_back(w);
-				// 无需加锁的内容直接写入
+				// Write content not requiring lock directly
 				hyperGT_A[rrSetID].push_back(w);
-				RRP_A[rrSetID].emplace(w,rawNewNode);
+				RRP_A[rrSetID].emplace(w, rawNewNode);
 				Q.push(rawNewNode);
 			}
 			else if (Afirst) {
@@ -578,12 +567,12 @@ unique_ptr<RNode> InfGraph::BuildSingleARRSet_Order(int uStart, int rrSetID, boo
 		}
 	}
 	{
-		lock_guard<mutex> lock(lockA); // 加锁保护写入
+		lock_guard<mutex> lock(lockA); // Lock to protect write operations
 		for (int w : temp)
 			hyperG_A[w].push_back(rrSetID);
 	}
 
-	return root; // 返回 root 的 unique_ptr
+	return root; // Return the unique_ptr of root
 }
 unique_ptr<RNode> InfGraph::BuildSingleBRRSet_Order(int uStart, int rrSetID, bool Afirst) {
 	//initailization
@@ -591,7 +580,6 @@ unique_ptr<RNode> InfGraph::BuildSingleBRRSet_Order(int uStart, int rrSetID, boo
 	auto root = std::make_unique<RNode>(uStart);
 	auto& probT = graph->probT;
 
-	// 临时存储需要写入的数据
 	vector<int> temp;     
 
 	//test root v
@@ -600,16 +588,14 @@ unique_ptr<RNode> InfGraph::BuildSingleBRRSet_Order(int uStart, int rrSetID, boo
 		if (!Afirst) examined[rrSetID].insert(uStart);
 		return NULL;
 	}
-	hyperGT_B[rrSetID].push_back(uStart); // 添加到 RR-set
+	hyperGT_B[rrSetID].push_back(uStart); 
 	RRP_B[rrSetID].emplace(uStart, root.get());
 	{
-		// 临界区保护 hyperG_A 的写操作
 		lock_guard<mutex> lock(lockB);
 		hyperG_B[uStart].push_back(rrSetID);
 	}
 
-	// BFS 队列初始化
-	queue<RNode*> Q; // 队列存储裸指针，不持有节点所有权
+	queue<RNode*> Q; 
 	Q.push(root.get());
 
 	visited[uStart] = time_stamp;
@@ -644,7 +630,6 @@ unique_ptr<RNode> InfGraph::BuildSingleBRRSet_Order(int uStart, int rrSetID, boo
 
 			visited[w] = time_stamp;
 
-			// 检查节点并构造 RR 集
 			coin = randomDouble();
 			if (coin <= qbo) {
 
@@ -653,9 +638,7 @@ unique_ptr<RNode> InfGraph::BuildSingleBRRSet_Order(int uStart, int rrSetID, boo
 				RNode* rawNewNode = newNode.get();
 				curNode->children.push_back(std::move(newNode));
 
-				// 需要加锁的内容存入临时变量
 				temp.push_back(w);
-				// 无需加锁的内容直接写入
 				hyperGT_B[rrSetID].push_back(w);
 				RRP_B[rrSetID].emplace(w,rawNewNode);
 				Q.push(rawNewNode);
@@ -666,7 +649,7 @@ unique_ptr<RNode> InfGraph::BuildSingleBRRSet_Order(int uStart, int rrSetID, boo
 		}
 	}
 	{
-		std::lock_guard<std::mutex> lock(lockB); // 加锁保护写入
+		std::lock_guard<std::mutex> lock(lockB); 
 		for (int w : temp)
 			hyperG_B[w].push_back(rrSetID);
 	}
@@ -685,7 +668,7 @@ void InfGraph::BuildHypergraphR_Order(int run, bool Afirst) {
 	omp_set_num_threads(1);
 	int progress = 0;
 
-	////////////////////////////////////////////并行区////////////////////////////////////////////
+	////////////////////////////////////////////Parallel////////////////////////////////////////////
 	#pragma omp parallel
 	{
 		graph->init_EdgeStatus();
@@ -732,11 +715,7 @@ void InfGraph::BuildSeedSetIG_Order_Afirst()
 
 	}
 
-	cout << "Check point: degreeA[641]=" << degree_A[641] << ", degreeA[614]=" << degree_A[614] << ", degreeA[539]=" << degree_A[539] << ", degreeA[129]=" << degree_A[129] << ", degreeA[225]=" << degree_A[225] << ", degreeA[202]=" << degree_A[202] << ", degreeA[173]=" << degree_A[173] << endl;
-	cout << "Check point: degreeB[641]=" << degree_B[641] << ", degreeB[614]=" << degree_B[614] << ", degreeB[539]=" << degree_B[539] << ", degreeB[129]=" << degree_A[129] << ", degreeB[225]=" << degree_B[225] << ", degreeB[202]=" << degree_B[202] << ", degreeB[173]=" << degree_B[173] << endl;
-
-
-	int cA = 0, cB = 0; int tag641_pass = 0, tag641_trim = 0, tag641_unvisit = 0, tag641_visited = 0, tag641_case1 = 0, tag641_case2 = 0; double coin;
+	int cA = 0, cB = 0; double coin;
 	for (int i = 0; i < kA + kB; i++) {
 
 		auto tA = max_element(degree_A.begin(), degree_A.end());
@@ -771,79 +750,17 @@ void InfGraph::BuildSeedSetIG_Order_Afirst()
 				//trim all pair which rA contains aseed
 				//Case1: aseed exist in rA, regardless of rB
 				if (!visit_B[t] && RRTree_B[t]) {
-
-					//tag641_case1++;
-					//RPointer prob = RPointer(t, nullptr);
-					//auto it = RRP_A[aseed].find(prob);
-					/*
-					cout << "____________________________________RR:"<< t <<" 剪枝前___________________________________________" << endl;
-					cout << "B Tree:" << endl;
-					printTree(RRTree_B[t].get());
-					cout << "A Tree:" << endl;
-					printTree(RRTree_A[t].get());*/
-					//visit_B[t] = pruningRB_01(RRTree_A[t].get(), RRP_A[t][aseed], t);
-					/*
-					cout << "____________________________________RR:" << t << " 剪枝后___________________________________________" << endl;
-					cout << "B Tree:" << endl;
-					printTree(RRTree_B[t].get());
-					cout << "A Tree:" << endl;
-					printTree(RRTree_A[t].get());
-					cout << endl;
-					cout << endl;
-					cout << endl;*/
+					visit_B[t] = pruningRB_01(RRTree_A[t].get(), RRP_A[t][aseed], t);
 				}
 
 			}
-			//	cout << "Check point: before pruning_02 degreeB[641]=" << degree_B[641] << ", 641 case1  " << tag641_case1 << endl;
 
 			for (int t : hyperG_B[aseed]) {
 				//RPointer prob = RPointer(t, nullptr);
 				//auto it = RRP_A[aseed].find(prob);
 				auto it = RRP_A[t].find(aseed);
 				if (!visit_B[t] && it == RRP_A[t].end()) {//Case2: aseed exist in rB but not in rA
-					//tag641_case2++;
-					/*
-					cout << "_______________________________________________________________________________"<<endl;
-					cout << ">>>>>>>>>>>>>>>before pruning:" << endl;
-
-					cout << "rb_GT " << t << ": [";
-					for (int i = 0; i < hyperGT_B[t].size(); i++)
-						cout << hyperGT_B[t][i] << " ";
-					cout << "]" << " deleted? " << visit_B[t] << endl;
-
-					cout << "ra_GT " << t << ": [";
-					for (int i = 0; i < hyperGT_A[t].size(); i++)
-						cout << hyperGT_A[t][i] << " ";
-					cout << "]" << endl;
-
-					cout << "B Tree:" << endl;
-					printTree(RRTree_B[t]);
-					cout << "A Tree:" << endl;
-					printTree(RRTree_A[t]);
-					*/
-					//RPointer prob = RPointer(t, nullptr);
-					//auto it = RRP_B[aseed].find(prob);
-					//if (it == RRP_B[aseed].end()) 
-					//pruningRB_02(RRTree_B[t].get(), RRP_B[t][aseed], t, delayDel);
-
-					/*
-					cout << ">>>>>>>>>>>>>>>after pruning:" << endl;
-
-					cout << "rb_GT " << t << ": [";
-					for (int i = 0; i < hyperGT_B[t].size(); i++)
-						cout << hyperGT_B[t][i] << " ";
-					cout << "]" << " deleted? " << visit_B[t] << endl;
-
-					cout << "ra_GT " << t << ": [";
-					for (int i = 0; i < hyperGT_A[t].size(); i++)
-						cout << hyperGT_A[t][i] << " ";
-					cout << "]" << endl;
-
-					cout << "B Tree:" << endl;
-					printTree(RRTree_B[t]);
-					cout << "A Tree:" << endl;
-					printTree(RRTree_A[t]);
-					*/
+					pruningRB_02(RRTree_B[t].get(), RRP_B[t][aseed], t, delayDel);
 
 				}
 			}
@@ -851,8 +768,6 @@ void InfGraph::BuildSeedSetIG_Order_Afirst()
 				auto& arr = hyperG_B[aseed];
 				arr.erase(remove(arr.begin(), arr.end(), elem), arr.end());
 			}
-			//	cout << "Check point: after pruning_02 degreeB[641]=" << degree_B[641] << ", 641 case1  " << tag641_case1 << ", 641 case2 " << tag641_case2 << endl;
-
 
 		}
 		//select B seed
@@ -860,8 +775,6 @@ void InfGraph::BuildSeedSetIG_Order_Afirst()
 
 			// degree_A[bseed] = 0;//won't be A seed
 			cB++;
-			//if (bseed == 614)
-				//cout << "node 614 cover " << hyperG_B[id].size() << " RB" << endl;
 			cout << "Round: " << i << ", new B seed : " << bseed << endl;
 			bSeeds.push_back(bseed);
 			if (bseed == 641)
@@ -891,8 +804,6 @@ void InfGraph::BuildSeedSetIG_Order_Afirst()
 					}
 				}
 			}
-			// degree discount of A
-		    //degree_A[bseed] -= discount2 * qao;
 		}
 
 		cout << endl;
@@ -917,19 +828,18 @@ bool InfGraph::pruningRB_01(RNode* root, RNode* aseed, int rrSetID) {
 	int v, t; double coin;
 	double hold = qba / qbo;
 	auto& test = tested[rrSetID];
-	//backtrack from aseed to root in ra
+	// Backtrack from aseed to root in ra
 	while (cur_a != root) {
 		v = cur_a->vex;
 
 		if (test.find(v) == test.end()) {
 			test.insert(v);
-			//if v exists in rb 
-			//RPointer prob = RPointer(rrSetID, nullptr);
-			//auto it = RRP_B[v].find(prob);
-			//if (it != RRP_B[v].end()) 
+			// If v exists in rb 
+			// RPointer prob = RPointer(rrSetID, nullptr);
+			// auto it = RRP_B[v].find(prob);
+			// if (it != RRP_B[v].end()) 
 			auto loc = RRP_B[rrSetID].find(v);
-			if (loc!=RRP_B[rrSetID].end())
-			{
+			if (loc != RRP_B[rrSetID].end()) {
 				coin = randomDouble();
 				if (coin > qba) {
 					stack<RNode*> sta;
@@ -941,7 +851,7 @@ bool InfGraph::pruningRB_01(RNode* root, RNode* aseed, int rrSetID) {
 						RNode* s = sta.top();
 						sta.pop();
 
-						// 更新相关统计
+						// Update related statistics
 						t = s->vex;
 						degree_B[t]--;
 
@@ -957,43 +867,39 @@ bool InfGraph::pruningRB_01(RNode* root, RNode* aseed, int rrSetID) {
 							sta.push(child.get());
 						}
 
-						// 延迟释放
+						// Delay deletion
 						if (!s->children.empty()) {
-							nodesToDelete.push_back(std::move(s->children.back())); // 转移所有权到 nodesToDelete
-							s->children.pop_back(); // 从子节点列表中移除
+							nodesToDelete.push_back(std::move(s->children.back())); // Transfer ownership to nodesToDelete
+							s->children.pop_back(); // Remove from children list
 						}
-
 					}
 
-					// 将 cur_b 从父节点的 siblings 中移除
-					auto& siblings = cur_b->parent->children;  // 获取父节点的子节点列表
+					// Remove cur_b from its parent's siblings
+					auto& siblings = cur_b->parent->children;  // Get parent's children list
 					siblings.erase(remove_if(siblings.begin(), siblings.end(),
 						[cur_b](const unique_ptr<RNode>& node) { return node.get() == cur_b; }),
 						siblings.end());
-
 				}
 			}
-
-		}//end if
-		//cout << cur_a->vex << "->";
+		} // End if
+		// cout << cur_a->vex << "->";
 		cur_a = cur_a->parent;
-	}//end while
+	} // End while
 	if (cur_a == root) {
-		//cout << "Root reached" << endl;
+		// cout << "Root reached" << endl;
 		v = cur_a->vex;
 		if (test.find(v) == test.end()) {
 			test.insert(v);
 			double coin = randomDouble();
-			if (coin > qba) {//delete the whole RR set
+			if (coin > qba) { // Delete the whole RR set
 				for (int t : hyperGT_B[rrSetID]) {
 					degree_B[t]--;
-					//RPointer temp(rrSetID, nullptr);
-					//RRP_B[t].erase(temp);
+					// RPointer temp(rrSetID, nullptr);
+					// RRP_B[t].erase(temp);
 					RRP_B[rrSetID].erase(t);
 				}
 				return true;
 			}
-
 		}
 	}
 	else {
@@ -1001,8 +907,8 @@ bool InfGraph::pruningRB_01(RNode* root, RNode* aseed, int rrSetID) {
 	}
 	return false;
 }
-bool InfGraph::pruningRB_02(RNode* root, RNode* aseed, int rrSetID, unordered_set<int>& delay) {
 
+bool InfGraph::pruningRB_02(RNode* root, RNode* aseed, int rrSetID, unordered_set<int>& delay) {
 	if (root == nullptr)
 		return true;
 
@@ -1014,7 +920,7 @@ bool InfGraph::pruningRB_02(RNode* root, RNode* aseed, int rrSetID, unordered_se
 	auto& test = tested[rrSetID];
 	auto& examine = examined[rrSetID];
 
-	// 用于延迟删除的容器，存储需要删除的子树
+	// Container for delayed deletion, storing subtrees to be deleted
 	std::vector<std::unique_ptr<RNode>> nodesToDelete;
 
 	// Backtrack from `aseed` to the break point
@@ -1051,7 +957,7 @@ bool InfGraph::pruningRB_02(RNode* root, RNode* aseed, int rrSetID, unordered_se
 					[p](const std::unique_ptr<RNode>& node) { return node.get() == p; });
 
 				if (it != siblings.end()) {
-					// 将被删除的节点所有权转移到延迟删除容器
+					// Transfer ownership of the node to be deleted to the delayed deletion container
 					nodesToDelete.push_back(std::move(*it));
 					siblings.erase(it);
 				}
@@ -1076,7 +982,7 @@ bool InfGraph::pruningRB_02(RNode* root, RNode* aseed, int rrSetID, unordered_se
 
 					auto& vec_p1 = hyperGT_B[rrSetID];
 					vec_p1.erase(std::remove(vec_p1.begin(), vec_p1.end(), t), vec_p1.end());
-					//延迟删除，不然调用该函数的循环会出问题
+					// Delayed deletion to avoid issues in the calling loop
 					if (t == aseed->vex)
 						delay.insert(rrSetID);
 					else {
@@ -1097,19 +1003,18 @@ bool InfGraph::pruningRB_02(RNode* root, RNode* aseed, int rrSetID, unordered_se
 						}
 					}
 
-					//延迟释放, 清空当前节点的子节点，但不手动删除，内存交由 `unique_ptr` 自动管理
+					// Delayed deletion: clear the current node's children without manual deletion, memory managed by `unique_ptr`
 					if (!s->children.empty()) {
-						nodesToDelete.push_back(std::move(s->children.back())); // 转移所有权到 nodesToDelete
-						s->children.pop_back(); // 从子节点列表中移除
+						nodesToDelete.push_back(std::move(s->children.back())); // Transfer ownership to nodesToDelete
+						s->children.pop_back(); // Remove from children list
 					}
-				}//end-while
-
+				} // End while
 			}
 		}
 		cur = parent;
 	}
 
-	// 延迟删除的节点会在 `nodesToDelete` 离开作用域时自动释放
+	// Delayed deletion nodes will be automatically released when `nodesToDelete` goes out of scope
 	return true;
 }
 ////////////////////////////////////Bfirst//////////////////////////////////////////////////////
@@ -1126,10 +1031,8 @@ void InfGraph::BuildSeedSetIG_Order_Bfirst()
 		degree_B.push_back(hyperG_B[i].size());
 	}
 
-	cout << "Check point: degreeA[641]=" << degree_A[641] << ", degreeA[614]=" << degree_A[614] << ", degreeA[539]=" << degree_A[539] << ", degreeA[129]=" << degree_A[129] << ", degreeA[225]=" << degree_A[225] << ", degreeA[202]=" << degree_A[202] << ", degreeA[173]=" << degree_A[173] << endl;
-	cout << "Check point: degreeB[641]=" << degree_B[641] << ", degreeB[614]=" << degree_B[614] << ", degreeB[539]=" << degree_B[539] << ", degreeB[129]=" << degree_A[129] << ", degreeB[225]=" << degree_B[225] << ", degreeB[202]=" << degree_B[202] << ", degreeB[173]=" << degree_B[173] << endl;
 
-	int cA = 0, cB = 0; int tag641_pass = 0, tag641_trim = 0, tag641_unvisit = 0, tag641_visited = 0, tag641_case1 = 0, tag641_case2 = 0; double coin;
+	int cA = 0, cB = 0; double coin;
 	for (int i = 0; i < kA + kB; i++) {
 
 		auto tA = max_element(degree_A.begin(), degree_A.end());
@@ -1252,7 +1155,6 @@ bool InfGraph::pruningRA_01(RNode* root, RNode* bseed, int rrSetID) {
 						RNode* s = sta.top();
 						sta.pop();
 
-						// 更新相关统计
 						t = s->vex;
 						degree_A[t]--;
 
@@ -1267,16 +1169,14 @@ bool InfGraph::pruningRA_01(RNode* root, RNode* bseed, int rrSetID) {
 							sta.push(child.get());
 						}
 
-						// 延迟释放
 						if (!s->children.empty()) {
-							nodesToDelete.push_back(move(s->children.back())); // 转移所有权到 nodesToDelete
-							s->children.pop_back(); // 从子节点列表中移除
+							nodesToDelete.push_back(move(s->children.back())); 
+							s->children.pop_back(); 
 						}
 
 					}
 
-					// 将 cur_a 从父节点的 siblings 中移除
-					auto& siblings = cur_a->parent->children;  // 获取父节点的子节点列表
+					auto& siblings = cur_a->parent->children;  
 					siblings.erase(remove_if(siblings.begin(), siblings.end(),
 						[cur_a](const unique_ptr<RNode>& node) { return node.get() == cur_a; }),
 						siblings.end());
@@ -1357,7 +1257,6 @@ bool InfGraph::pruningRA_02(RNode* root, RNode* bseed, int rrSetID, unordered_se
 					[p](const std::unique_ptr<RNode>& node) { return node.get() == p; });
 
 				if (it != siblings.end()) {
-					// 将被删除的节点所有权转移到延迟删除容器
 					nodesToDelete.push_back(move(*it));
 					siblings.erase(it);
 				}
@@ -1382,7 +1281,7 @@ bool InfGraph::pruningRA_02(RNode* root, RNode* bseed, int rrSetID, unordered_se
 
 					auto& vec_p1 = hyperGT_A[rrSetID];
 					vec_p1.erase(remove(vec_p1.begin(), vec_p1.end(), t), vec_p1.end());
-					//延迟删除，不然调用该函数的循环会出问题
+
 					if (t == bseed->vex)
 						delay.insert(rrSetID);
 					else {
@@ -1403,10 +1302,9 @@ bool InfGraph::pruningRA_02(RNode* root, RNode* bseed, int rrSetID, unordered_se
 						}
 					}
 
-					//延迟释放, 清空当前节点的子节点，但不手动删除，内存交由 `unique_ptr` 自动管理
 					if (!s->children.empty()) {
-						nodesToDelete.push_back(move(s->children.back())); // 转移所有权到 nodesToDelete
-						s->children.pop_back(); // 从子节点列表中移除
+						nodesToDelete.push_back(move(s->children.back())); 
+						s->children.pop_back(); 
 					}
 				}//end-while
 
@@ -1414,7 +1312,5 @@ bool InfGraph::pruningRA_02(RNode* root, RNode* bseed, int rrSetID, unordered_se
 		}
 		cur = parent;
 	}
-
-	// 延迟删除的节点会在 `nodesToDelete` 离开作用域时自动释放
 	return true;
 }

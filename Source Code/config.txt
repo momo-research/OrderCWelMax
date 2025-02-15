@@ -1,0 +1,13 @@
+algo : 5
+phase : 1
+ignoreBSeeds : 0
+selectBSeeds : 0
+epsilon : 0.5
+theta : 200000
+kA : 50
+kB : 50
+runs : 1
+qao : 0.90
+qbo : 0.90
+qab : 0.20
+qba : 0.60
