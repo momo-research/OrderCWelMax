@@ -39,11 +39,13 @@ OrderCWelMax/
 ## **Build Instructions**
 1. Clone the repository:
 2. Enter the Source Code directory
-3. compile
+3. Compile the project
+We provide a Makefile for easy compilation. Simply run the following command:
 ```
   make
 ```
-4. run
+You can modify the compilation options in the Makefile if needed.
+4. run the program
 ```
 ./build/seqic
 ```
